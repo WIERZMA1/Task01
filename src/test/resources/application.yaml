@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false;MODE=MYSQL"
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+      - org.springframework.boot.autoconfigure.h2.H2ConsoleAutoConfiguration
+  liquibase:
+    change-log: classpath:/com/example/example-changelog.xml

@@ -1,0 +1,19 @@
+node_modules
+*.log
+.nyc_output
+test-results.xml
+coverage
+*.bak
+*bundle.js
+
+# TernJS port file
+.tern-port
+
+# MACOS files
+.DS_Store
+dist
+target
+
+# intellij idea
+.idea
+*.iml
