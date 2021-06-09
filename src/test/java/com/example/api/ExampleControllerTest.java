@@ -5,59 +5,80 @@ import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 @TestExecutionListeners(
         listeners = {DbUnitTestExecutionListener.class},
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS
 )
 @DatabaseTearDown("classpath:com/example/clearData.xml")
-class ExampleControllerTest {
+public class ExampleControllerTest {
 
     @Autowired
-    MockMvc mock;
+    public MockMvc mockMvc;
 
     @Test
     @DatabaseSetup("classpath:com/example/examplesData.xml")
-    void getAll() {
-        mock.perform(get("/api/examples")).andExpect(status().isOk());
-    }
-
-    @Test
-    @DatabaseSetup("classpath:com/example/examplesData.xml")
-    void getById() {
-        mock.perform(get("/api/example/1"))
+    public void getAll() throws Exception {
+        mockMvc.perform(get("/api/examples"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-    }
-
-    @Test
-    void create() {
-    }
-
-    @Test
-    @DatabaseSetup("classpath:com/example/examplesData.xml")
-    void update() {
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(5)));
     }
 
     @Test
     @DatabaseSetup("classpath:com/example/examplesData.xml")
-    void delete() {
+    public void getById() throws Exception {
+        mockMvc.perform(get("/api/example/{exampleId}", 1))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.description", is("example01")));
+    }
+
+    @Test
+    public void getNonExisting() throws Exception {
+        mockMvc.perform(get("/api/example/{exampleId}", 1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").doesNotExist());
+    }
+
+    @Test
+    public void create() throws Exception {
+        mockMvc.perform(post("/api/examples")
+                .content("{ \"id\":\"1\", \"description\":\"New Example\" }")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", notNullValue()))
+                .andExpect(jsonPath("$.description", is("New Example")));
+    }
+
+    @Test
+    @DatabaseSetup("classpath:com/example/examplesData.xml")
+    public void update() throws Exception {
+        mockMvc.perform(put("/api/example/3")
+                .content("{ \"id\":\"3\", \"description\":\"Changed Example\" }")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is(3)))
+                .andExpect(jsonPath("$.description", is("Changed Example")));
+    }
+
+    @Test
+    @DatabaseSetup("classpath:com/example/examplesData.xml")
+    public void deleteById() throws Exception {
+        mockMvc.perform(delete("/api/example/3")).andExpect(status().isOk());
     }
 }

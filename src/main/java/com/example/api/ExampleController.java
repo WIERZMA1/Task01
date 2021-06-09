@@ -21,7 +21,7 @@ public class ExampleController {
     }
 
     @GetMapping("/example/{exampleId}")
-    Example getById(@PathVariable Long exampleId) {
+    Example get(@PathVariable Long exampleId) {
         return exampleService.getById(exampleId).orElse(null);
     }
 
